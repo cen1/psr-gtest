@@ -1,0 +1,7 @@
+﻿  test.cpp
+c:\users\klemen\git\psr-gtest\test.cpp(28): warning C4018: '<': signed/unsigned mismatch
+c:\users\klemen\git\psr-gtest\test.cpp(33): warning C4018: '<': signed/unsigned mismatch
+  psr.cpp
+  Generating Code...
+  test.vcxproj -> C:\Users\klemen\git\psr-gtest\Debug\test.exe
+  test.vcxproj -> C:\Users\klemen\git\psr-gtest\Debug\test.pdb (Partial PDB)
