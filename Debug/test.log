@@ -1,6 +1,12 @@
 ﻿  psr.cpp
 c:\users\klemen\git\psr-gtest\psr.cpp(375): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
 c:\users\klemen\git\psr-gtest\psr.cpp(380): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-c:\users\klemen\git\psr-gtest\psr.h(201): warning C4715: 'CDIV1DotAPlayer::GetCurrentTeam': not all control paths return a value
+  Generating Code...
+c:\users\klemen\git\psr-gtest\psr.h(211): warning C4715: 'CDIV1DotAPlayer::GetCurrentTeam': not all control paths return a value
+  Compiling...
+  test.cpp
+c:\users\klemen\git\psr-gtest\test.cpp(28): warning C4018: '<': signed/unsigned mismatch
+c:\users\klemen\git\psr-gtest\test.cpp(33): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
   test.vcxproj -> C:\Users\klemen\git\psr-gtest\Debug\test.exe
   test.vcxproj -> C:\Users\klemen\git\psr-gtest\Debug\test.pdb (Partial PDB)

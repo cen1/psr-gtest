@@ -17,6 +17,7 @@ typedef pair<string,double> PairedPlayerRating;
 class CGameSlot;
 class CBalanceSlot;
 class CDIV1DotAPlayer;
+class CDBDiv1DPS;
 
 //
 // CPSR
@@ -150,6 +151,7 @@ private:
 	unsigned char m_PID;
 	unsigned char m_NewColor;
 	CPSR * m_Game;
+	CDBDiv1DPS * dps;
 
 public:
 
@@ -159,6 +161,14 @@ public:
 		m_PID = p;
 		m_NewColor = p;
 		m_Game = game;
+	}
+	CDIV1DotAPlayer(double r, string n, unsigned char p, CPSR * game, CDBDiv1DPS * d) {
+		m_Rating = r;
+		m_Name = n;
+		m_PID = p;
+		m_NewColor = p;
+		m_Game = game;
+		dps = d;
 	}
 
 	double GetRating() { return m_Rating; }
@@ -211,6 +221,55 @@ public:
 	unsigned char m_PID;
 	unsigned char m_Team;
 	double m_Rating;
+};
+
+class CDBDiv1DPS
+{
+private:
+	double m_Rating;
+	double m_HighestRating;
+	uint32_t m_TotalGames;			// total number of dota games played
+	uint32_t m_TotalWins;			// total number of dota games won
+	uint32_t m_TotalLosses;			// total number of dota games lost
+	uint32_t m_TotalKills;			// total number of hero kills
+	uint32_t m_TotalDeaths;			// total number of deaths
+	uint32_t m_TotalCreepKills;		// total number of creep kills
+	uint32_t m_TotalCreepDenies;	// total number of creep denies
+	uint32_t m_TotalAssists;		// total number of assists
+	uint32_t m_TotalNeutralKills;	// total number of neutral kills
+									//uint32_t m_TotalTowerKills;	// total number of tower kills
+									//uint32_t m_TotalRaxKills;		// total number of rax kills
+									//uint32_t m_TotalCourierKills;	// total number of courier kills
+
+
+public:
+	CDBDiv1DPS(double nRating, double nHighestRating, uint32_t nTotalGames, uint32_t nTotalWins, uint32_t nTotalLosses, uint32_t nTotalKills, uint32_t nTotalDeaths, uint32_t nTotalCreepKills, uint32_t nTotalCreepDenies, uint32_t nTotalAssists, uint32_t nTotalNeutralKills)
+		: m_Rating(nRating), m_HighestRating(nHighestRating), m_TotalGames(nTotalGames), m_TotalWins(nTotalWins), m_TotalLosses(nTotalLosses), m_TotalKills(nTotalKills), m_TotalDeaths(nTotalDeaths), m_TotalCreepKills(nTotalCreepKills), m_TotalCreepDenies(nTotalCreepDenies), m_TotalAssists(nTotalAssists), m_TotalNeutralKills(nTotalNeutralKills) { }
+	~CDBDiv1DPS() { }
+
+	uint32_t GetTotalGames() { return m_TotalGames; }
+	uint32_t GetTotalWins() { return m_TotalWins; }
+	uint32_t GetTotalLosses() { return m_TotalLosses; }
+	uint32_t GetTotalKills() { return m_TotalKills; }
+	uint32_t GetTotalDeaths() { return m_TotalDeaths; }
+	uint32_t GetTotalCreepKills() { return m_TotalCreepKills; }
+	uint32_t GetTotalCreepDenies() { return m_TotalCreepDenies; }
+	uint32_t GetTotalAssists() { return m_TotalAssists; }
+	uint32_t GetTotalNeutralKills() { return m_TotalNeutralKills; }
+	//uint32_t GetTotalTowerKills( )	{ return m_TotalTowerKills; }
+	//uint32_t GetTotalRaxKills( )		{ return m_TotalRaxKills; }
+	//uint32_t GetTotalCourierKills( )	{ return m_TotalCourierKills; }
+	float GetAvgKills() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalKills / (m_TotalWins + m_TotalLosses) : 0; }
+	float GetAvgDeaths() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalDeaths / (m_TotalWins + m_TotalLosses) : 0; }
+	float GetAvgCreepKills() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalCreepKills / (m_TotalWins + m_TotalLosses) : 0; }
+	float GetAvgCreepDenies() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalCreepDenies / (m_TotalWins + m_TotalLosses) : 0; }
+	float GetAvgAssists() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalAssists / (m_TotalWins + m_TotalLosses) : 0; }
+	float GetAvgNeutralKills() { return (m_TotalWins + m_TotalLosses) > 0 ? (float)m_TotalNeutralKills / (m_TotalWins + m_TotalLosses) : 0; }
+	//float GetAvgTowerKills( )			{ return ( m_TotalWins + m_TotalLosses ) > 0 ? (float)m_TotalTowerKills / ( m_TotalWins + m_TotalLosses ) : 0; }
+	//float GetAvgRaxKills( )			{ return ( m_TotalWins + m_TotalLosses ) > 0 ? (float)m_TotalRaxKills / ( m_TotalWins + m_TotalLosses ) : 0; }
+	//float GetAvgCourierKills( )		{ return ( m_TotalWins + m_TotalLosses ) > 0 ? (float)m_TotalCourierKills / ( m_TotalWins + m_TotalLosses ) : 0; }
+	double GetRating() { return m_Rating; }
+	double GetHighestRating() { return m_HighestRating; }
 };
 
 
