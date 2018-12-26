@@ -2,10 +2,18 @@
 //#include "ghost.h"
 #include "psr.h"
 #include <utility>
-
+#include <iostream>
+#include <set>
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 using std::make_pair;
+using std::cout;
+using std::set;
+using std::stringstream;
+using std::list;
 
 //
 // CPSR
@@ -232,4 +240,235 @@ vector<pair<double, double> > CPSR::getTeam1gainLose() {
 
 vector<pair<double, double> > CPSR::getTeam2gainLose() {
 	return m_team2gainLose;
+}
+
+void CPSR::balance() {
+
+	cout << "PRE-BALANCE" << std::endl;
+	for (auto i = m_Slots.begin(); i != m_Slots.end(); i++) {
+		for (auto j = m_DotAPlayers.begin(); j != m_DotAPlayers.end(); j++) {
+			if ((*i).GetPID() == (*j)->GetPID()) {
+				cout << (int)(*i).m_Colour << ": " << (*j)->GetName() << " - " << (*j)->GetRating() << std::endl;
+			}
+		}
+	}
+
+	this->BalanceSlots2();
+
+	vector<PairedPlayerRating> team1;
+	vector<PairedPlayerRating> team2;
+
+	for (auto i = m_Slots.begin(); i != m_Slots.end(); i++) {
+		for (auto j = m_DotAPlayers.begin(); j != m_DotAPlayers.end(); j++) {
+			if ((*i).GetPID() == (*j)->GetPID()) {
+				string Name = (*j)->GetName();
+
+				if ((*i).GetTeam() == 0) {
+					team1.push_back(make_pair(Name, (*j)->GetRating()));
+				}
+				else if ((*i).GetTeam() == 1) {
+					team2.push_back(make_pair(Name, (*j)->GetRating()));
+				}
+			}
+		}
+	}
+
+	CalculatePSR(team1, team2);
+
+	cout << "Sentinel avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(0), 0) + "(" + UTIL_ToString(GetTeamWinPerc(0), 0) + "% to win), Scourge avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(1), 0) + "(" + UTIL_ToString(GetTeamWinPerc(1), 0) + "% to win)" << std::endl;
+
+	/*std::sort(m_Slots.begin(),
+		m_Slots.end(),
+		[](const CGameSlot& lhs, const CGameSlot& rhs)
+	{
+		return lhs.m_Colour < rhs.m_Colour;
+	});*/
+
+	cout << "POST-BALANCE" << std::endl;
+	for (auto i = m_Slots.begin(); i != m_Slots.end(); i++) {
+		for (auto j = m_DotAPlayers.begin(); j != m_DotAPlayers.end(); j++) {
+			if ((*i).GetPID() == (*j)->GetPID()) {
+				cout << (int)(*i).m_Colour << ": " << (*j)->GetName() << " - " << (*j)->GetRating() << std::endl;
+			}
+		}
+
+	}
+}
+
+string CPSR::UTIL_ToString(double d, int digits) {
+	string result;
+	stringstream SS;
+	SS << std::fixed << std::setprecision(digits) << d;
+	SS >> result;
+	return result;
+}
+
+void CPSR::BalanceSlots2() {
+	if (m_DotAPlayers.size() < 2)
+		return;
+
+	list<CBalanceSlot> SlotsToBalance;
+	set<unsigned char> TakenSlots;
+
+	for (list<CDIV1DotAPlayer *> ::iterator i = m_DotAPlayers.begin(); i != m_DotAPlayers.end(); ++i)
+	{
+		SlotsToBalance.push_back(CBalanceSlot(false, (*i)->GetPID(), (*i)->GetCurrentTeam(), (*i)->GetRating()));
+	}
+
+	this->BalanceSlots2Recursive(SlotsToBalance);
+
+	for (list<CBalanceSlot> ::iterator i = SlotsToBalance.begin(); i != SlotsToBalance.end(); ++i)
+	{
+		if ((*i).m_Locked)
+			continue;
+
+		unsigned char j;
+		unsigned char end;
+
+		if ((*i).m_Team == 0)
+		{
+			j = 0;
+			end = 5;
+		}
+		else if ((*i).m_Team == 1)
+		{
+			j = 5;
+			end = 10;
+		}
+
+		for (; j < end; ++j)
+		{
+			if (TakenSlots.find(j) == TakenSlots.end())
+			{
+				SwapSlots(GetSIDFromPID((*i).m_PID), j);
+				TakenSlots.insert(j);
+				break;
+			}
+		}
+	}
+}
+
+unsigned int CPSR::BalanceSlots2Recursive(list<CBalanceSlot>& slots_to_balance) {
+	static unsigned int call = 0;
+	++call;
+	unsigned int current_call = call;
+	//cout << "call #" << call << endl;
+
+	unsigned int team1_players_count = 0;
+	unsigned int team2_players_count = 0;
+	int team1_rating = 0;
+	int team2_rating = 0;
+	int rating_diff = 0;
+	int next_rating_diff = 999999;
+
+	// teams static variable must be resetted in the last function call execution
+	static unsigned int teams = 0;
+	unsigned int current_teams = teams++;
+
+	int binary_position = 0;
+
+	for (list<CBalanceSlot> ::iterator i = slots_to_balance.begin(); i != slots_to_balance.end(); ++i)
+	{
+		if ((current_teams & (int)pow(2.0, binary_position)) == 0)
+		{
+			++team1_players_count;
+			team1_rating += (*i).m_Rating;
+		}
+		else
+		{
+			++team2_players_count;
+			team2_rating += (*i).m_Rating;
+		}
+
+		//cout << "teams:" << teams << " pow(2, binary_position):" << pow(2.0, binary_position) << endl;
+
+		++binary_position;
+	}
+
+	if (team1_players_count == 0 || team2_players_count == 0 || team1_players_count > 5 || team2_players_count > 5)
+		rating_diff = 999999;
+	else
+		rating_diff = abs(team1_rating - team2_rating);
+
+	//cout << "team2_players_count:" << team2_players_count << " slots_to_balance.size( ):" << slots_to_balance.size( ) << endl;
+
+	if (team2_players_count < slots_to_balance.size())
+	{
+		next_rating_diff = BalanceSlots2Recursive(slots_to_balance);
+	}
+	else
+	{
+		//cout << "this should be the last call, call #" << call << endl;
+		teams = 0; // this is the last function call execution, reset static variable
+	}
+
+	if (rating_diff < next_rating_diff)
+	{
+		binary_position = 0;
+
+		//cout << "call #" << current_call << endl;
+		//cout << "rating_diff:" << rating_diff << " next_rating_diff:" << next_rating_diff << endl;
+
+		for (list<CBalanceSlot> ::iterator i = slots_to_balance.begin(); i != slots_to_balance.end(); ++i)
+		{
+			if ((current_teams & (int)pow(2.0, binary_position)) == 0)
+			{
+				if ((*i).m_Locked && (*i).m_Team == 1)
+				{
+					// this team layout is invalid
+					// this player is locked to the scourge team, he can't be swaped to sentinel
+
+					rating_diff = 999999;
+					break;
+				}
+
+				(*i).m_Team = 0;
+			}
+			else
+			{
+				if ((*i).m_Locked && (*i).m_Team == 0)
+				{
+					// this team layout is invalid
+					// this player is locked to the sentinel team, he can't be swaped to scourge
+
+					rating_diff = 999999;
+					break;
+				}
+
+				(*i).m_Team = 1;
+			}
+
+			++binary_position;
+		}
+	}
+
+	return rating_diff < next_rating_diff ? rating_diff : next_rating_diff;
+}
+
+void CPSR::SwapSlots(unsigned char SID1, unsigned char SID2) {
+	if (SID1 < m_Slots.size() && SID2 < m_Slots.size() && SID1 != SID2)
+	{
+		CGameSlot Slot1 = m_Slots[SID1];
+		CGameSlot Slot2 = m_Slots[SID2];
+
+		//m_Slots[SID1] = Slot2;
+		//m_Slots[SID2] = Slot1;
+
+		m_Slots[SID1] = CGameSlot(Slot2.GetPID(), Slot1.GetTeam(), Slot1.GetColour());
+		m_Slots[SID2] = CGameSlot(Slot1.GetPID(), Slot2.GetTeam(), Slot2.GetColour());
+
+	}
+}
+
+unsigned char CPSR::GetSIDFromPID(unsigned char PID) {
+	if (m_Slots.size() > 255)
+		return 255;
+
+	for (unsigned char i = 0; i < m_Slots.size(); ++i)
+	{
+		if (m_Slots[i].GetPID() == PID)
+			return i;
+	}
+
+	return 255;
 }
