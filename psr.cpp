@@ -8,10 +8,13 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <tuple>
 
 using std::make_pair;
+using std::make_tuple;
 using std::cout;
 using std::set;
+using std::get;
 using std::stringstream;
 using std::list;
 
@@ -59,6 +62,16 @@ double CPSR :: GetTeamAvgPSR( unsigned team )
 		return m_team1avgpsr;
 	else
 		return m_team2avgpsr;
+}
+
+double CPSR::GetTeamAvgValue(unsigned team)
+{
+	// team, sentinel = 0, scourge = 1
+
+	if (team == 0)
+		return m_team1AverageValue;
+	else
+		return m_team2AverageValue;
 }
 
 double CPSR :: GetTeamWinPerc( unsigned team )
@@ -134,13 +147,14 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 	double team1totalpsr = 0;
 	double team2totalpsr = 0;
 
+	//Team 1 weight + total PSR
 	for( unsigned int i = 0; i < m_team1.size( ); ++i )
 	{
 		team1weights[i] = pow( m_team1[i].second, m_TeamRankWeighting );
 		team1weight += team1weights[i];
 		team1totalpsr += m_team1[i].second;
 	}
-
+	//Team 2 weight + total PSR
 	for( unsigned int i = 0; i < m_team2.size( ); ++i )
 	{
 		team2weights[i] = pow( m_team2[i].second, m_TeamRankWeighting );
@@ -148,9 +162,11 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 		team2totalpsr += m_team2[i].second;
 	}
 
+	//Team 1 & 2 average PSR
 	m_team1avgpsr = team1totalpsr / m_team1.size( );
 	m_team2avgpsr = team2totalpsr / m_team2.size( );
 
+	//?
 	double team1rating = pow( team1weight, (double)1.0 / m_TeamRankWeighting );
 	double team2rating = pow( team2weight, (double)1.0 / m_TeamRankWeighting );
 
@@ -158,15 +174,19 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 
 	double E = 2.7182;
 
+	//Team 1 & 2 win probabilities
 	double team1winprobability = 1.0 / ( 1.0 + pow( E, ( ( -1.0 * diff ) / m_LogisticPredictionScale ) ) );
 	double team2winprobability = 1.0 - team1winprobability;
 
+	//Calculate Team 1 K Factors (?)
 	for( unsigned int i = 0; i < m_team1.size( ); ++i )
 	{
+		//Calculate initial K Factor, cut off extremes
 		m_team1kfactors[i] = ( ( m_MedianScalingRank - m_team1[i].second ) / m_KFactorScale ) + m_BaseKFactor;
 		m_team1kfactors[i] = m_team1kfactors[i] > m_MaxKFactor ? m_MaxKFactor : m_team1kfactors[i];
 		m_team1kfactors[i] = m_team1kfactors[i] > m_MinKFactor ? m_team1kfactors[i] : m_MinKFactor ;
 
+		//Adjust K Factor for extremely standing out player
 		double distancefromteamavgpsr = m_team1[i].second - 50 - m_team1avgpsr;
 
 		if(distancefromteamavgpsr > 100 )
@@ -179,6 +199,7 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 		}
 	}
 
+	//Calculate Team 2 K Factors
 	for( unsigned int i = 0; i < m_team2.size( ); ++i )
 	{
 		m_team2kfactors[i] = ( ( m_MedianScalingRank - m_team2[i].second ) / m_KFactorScale ) + m_BaseKFactor;
@@ -197,6 +218,7 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 		}
 	}
 
+	//Calculate Team 1 Win/Lose points
 	for( unsigned int i = 0; i < m_team1.size( ); ++i ) {
 		double im_win = ceil( team2winprobability * m_team1kfactors[i] );
 		double im_lose = floor( team1winprobability * m_team1kfactors[i]);
@@ -212,6 +234,7 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 		m_team1gainLose.push_back( make_pair( im_win, im_lose ) );
 	}
 
+	//Calculate Team 2 Win/Lose points
 	for( unsigned int i = 0; i < m_team2.size( ); ++i ) {
 		double im_win = ceil( team1winprobability * m_team2kfactors[i] );
 		double im_lose = floor( team2winprobability * m_team2kfactors[i] );
@@ -243,18 +266,10 @@ vector<pair<double, double> > CPSR::getTeam2gainLose() {
 }
 
 void CPSR::balance() {
-
-	cout << "PRE-BALANCE" << std::endl;
-	for (auto i = m_Slots.begin(); i != m_Slots.end(); i++) {
-		for (auto j = m_DotAPlayers.begin(); j != m_DotAPlayers.end(); j++) {
-			if ((*i).GetPID() == (*j)->GetPID()) {
-				cout << (int)(*i).m_Colour << ": " << (*j)->GetName() << " - " << (*j)->GetRating() << std::endl;
-			}
-		}
-	}
-
+	//Redistribute players using PSR as criteria
 	this->BalanceSlots2();
 
+	//Assign players to teams, preparation for CalculatePSR, base on PSR only
 	vector<PairedPlayerRating> team1;
 	vector<PairedPlayerRating> team2;
 
@@ -273,25 +288,267 @@ void CPSR::balance() {
 		}
 	}
 
+	//Calculate PSR Gain/Loss for all players based on win % and their PSR
 	CalculatePSR(team1, team2);
 
-	cout << "Sentinel avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(0), 0) + "(" + UTIL_ToString(GetTeamWinPerc(0), 0) + "% to win), Scourge avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(1), 0) + "(" + UTIL_ToString(GetTeamWinPerc(1), 0) + "% to win)" << std::endl;
+	//Output for the players
+	//cout << "Sentinel avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(0), 0) + "(" + UTIL_ToString(GetTeamWinPerc(0), 0) + "% to win), Scourge avg. PSR: " + UTIL_ToString(GetTeamAvgPSR(1), 0) + "(" + UTIL_ToString(GetTeamWinPerc(1), 0) + "% to win)" << std::endl;
+}
 
-	/*std::sort(m_Slots.begin(),
-		m_Slots.end(),
-		[](const CGameSlot& lhs, const CGameSlot& rhs)
+//Change: implayingwithnewbiesfactor converted into WinPenaltyFactor which only affects Win PSR Gain
+//Basically, no penalty for PSR loss for high psr players in newbie game : they can win little but lose a lot
+void CPSR::CalculatePSRNew(vector<TupledPlayerValue> p_team1, vector<TupledPlayerValue> p_team2)
+{
+	if (p_team1.size() > 5 || p_team2.size() > 5) {
+		return;
+	}
+
+	vector<TupledPlayerValue> team1 = p_team1;
+	vector<TupledPlayerValue> team2 = p_team2;
+
+	//Not used anymore, calculated and set for compatibility
+	m_team1avgpsr = 0.0;
+	m_team2avgpsr = 0.0;
+
+	double gameTotalPSR = 0.0;
+	double gameAveragePSR = 0.0;
+
+	double team1TotalValue = 0.0;
+	double team2TotalValue = 0.0;
+
+	m_team1AverageValue = 0.0;
+	m_team2AverageValue = 0.0;
+
+	m_team1winPerc = 0.0;
+	m_team2winPerc = 0.0;
+
+	std::fill(m_team1kfactors.begin(), m_team1kfactors.end(), 0);
+	std::fill(m_team2kfactors.begin(), m_team2kfactors.end(), 0);
+
+	m_team1gainLose.clear();
+	m_team2gainLose.clear();
+
+	vector<double> team1weights(5, 0.0);
+	vector<double> team2weights(5, 0.0);
+	double team1weight = 0;
+	double team2weight = 0;
+
+	//Win penalty factors, initialized with 1 (no effect) to lower psr gain for players with far higher psr than game's average
+	std::vector<double> team1WinPenaltyFactors(m_team1kfactors.size());
+	std::vector<double> team2WinPenaltyFactors(m_team2kfactors.size());
+	std::fill(team1WinPenaltyFactors.begin(), team1WinPenaltyFactors.end(), 1);
+	std::fill(team2WinPenaltyFactors.begin(), team2WinPenaltyFactors.end(), 1);
+
+	//Team 1 weight + total PSR
+	for (unsigned int i = 0; i < team1.size(); ++i)
 	{
-		return lhs.m_Colour < rhs.m_Colour;
-	});*/
+		//Set weight based on mean of PlayerValue and PSR of each player
+		team1weights[i] = pow(get<1>(team1[i]), m_TeamRankWeighting);
+		team1weight += team1weights[i];
+		//Add player's PSR to game's total PSR
+		gameTotalPSR += get<2>(team1[i]);
+		//Add player's balanceValue to team total value
+		team1TotalValue += get<1>(team1[i]);
+	}
+	//Team 2 weight + total PSR
+	for (unsigned int i = 0; i < team2.size(); ++i)
+	{
+		//Set weight based on mean of PlayerValue and PSR of each player
+		team2weights[i] = pow(get<1>(team2[i]), m_TeamRankWeighting);
+		team2weight += team2weights[i];
+		//Add player's PSR to game's total PSR
+		gameTotalPSR += get<2>(team2[i]);
+		//Add player's balanceValue to team total value
+		team2TotalValue += get<1>(team2[i]);
+	}
 
-	cout << "POST-BALANCE" << std::endl;
+	//Calculate game's average PSR
+	gameAveragePSR = gameTotalPSR / (team1.size() + team1.size());
+
+	//Calculate and set teams' average values
+	m_team1AverageValue = team1TotalValue / team1.size();
+	m_team2AverageValue = team2TotalValue / team2.size();
+
+	//?
+	double team1rating = pow(team1weight, (double)1.0 / m_TeamRankWeighting);
+	double team2rating = pow(team2weight, (double)1.0 / m_TeamRankWeighting);
+
+	double diff = team1rating - team2rating;
+
+	double E = 2.7182;
+
+	//Team 1 & 2 win probabilities
+	double team1winprobability = 1.0 / (1.0 + pow(E, ((-1.0 * diff) / m_LogisticPredictionScale)));
+	double team2winprobability = 1.0 - team1winprobability;
+
+	//Calculate Team 1 K Factors
+	for (unsigned int i = 0; i < team1.size(); ++i)
+	{
+		//Calculate initial K Factor using BalanceValue for each player in team 1
+		m_team1kfactors[i] = ((m_MedianScalingRank - get<1>(team1[i])) / m_KFactorScale) + m_BaseKFactor;
+		//Cut off extreme values
+		m_team1kfactors[i] = m_team1kfactors[i] > m_MaxKFactor ? m_MaxKFactor : m_team1kfactors[i];
+		m_team1kfactors[i] = m_team1kfactors[i] > m_MinKFactor ? m_team1kfactors[i] : m_MinKFactor;
+
+		//Calculate player's PSR distance to game's average PSR
+		double distancefromteamavgpsr = get<2>(team1[i]) - 50 - gameAveragePSR;
+
+		if (distancefromteamavgpsr > 100)
+			distancefromteamavgpsr = 100;
+
+		if (distancefromteamavgpsr > 0 && distancefromteamavgpsr <= 100)
+		{
+			//Adjust K Factor for extremely standing out player based on his and game's average PSR
+			double implayingwithnewbiesfactor = (100.0 - distancefromteamavgpsr) / 100;
+			team1WinPenaltyFactors[i] = implayingwithnewbiesfactor;
+		}
+	}
+
+	//Calculate Team 2 K Factors
+	for (unsigned int i = 0; i < team2.size(); ++i)
+	{
+		//Calculate initial K Factor using BalanceValue for each player in team 1
+		m_team2kfactors[i] = ((m_MedianScalingRank - get<1>(team2[i])) / m_KFactorScale) + m_BaseKFactor;
+		//Cut off extreme values
+		m_team2kfactors[i] = m_team2kfactors[i] > m_MaxKFactor ? m_MaxKFactor : m_team2kfactors[i];
+		m_team2kfactors[i] = m_team2kfactors[i] > m_MinKFactor ? m_team2kfactors[i] : m_MinKFactor;
+
+		//Calculate player's PSR distance to game's average PSR
+		double distancefromteamavgpsr = get<2>(team2[i]) - 50 - gameAveragePSR;
+
+		if (distancefromteamavgpsr > 100)
+			distancefromteamavgpsr = 100;
+
+		if (distancefromteamavgpsr > 0 && distancefromteamavgpsr <= 100)
+		{
+			//Adjust K Factor for extremely standing out player based on his and game's average PSR
+			double implayingwithnewbiesfactor = (100.0 - distancefromteamavgpsr) / 100;
+			team2WinPenaltyFactors[i] = implayingwithnewbiesfactor;
+		}
+	}
+
+	//Calculate Team 1 Win/Lose points (both positive)
+	for (unsigned int i = 0; i < team1.size(); ++i) {
+		//Extremely high PSR player win panalty (relative to game's average PSR)
+		double im_win = ceil(team2winprobability * (m_team1kfactors[i] * team1WinPenaltyFactors[i]));
+		double im_lose = floor(team1winprobability * m_team1kfactors[i]);
+
+		//Minimum Gain/Loss is 1 PSR
+		if (im_win < 1.0) {
+			im_win = 1.0;
+		}
+		if (im_lose < 1.0) {
+			im_lose = 1.0;
+		}
+
+		m_team1gainLose.push_back(make_pair(im_win, im_lose));
+	}
+
+	//Calculate Team 2 Win/Lose points (both positive)
+	for (unsigned int i = 0; i < team2.size(); ++i) {
+		//Extremely high PSR player win panalty (relative to game's average PSR)
+		double im_win = ceil(team1winprobability * (m_team2kfactors[i] * team2WinPenaltyFactors[i]));
+		double im_lose = floor(team2winprobability * m_team2kfactors[i]);
+
+		//Minimum Gain/Loss is 1 PSR
+		if (im_win < 1.0) {
+			im_win = 1.0;
+		}
+		if (im_lose < 1.0) {
+			im_lose = 1.0;
+		}
+
+		m_team2gainLose.push_back(make_pair(im_win, im_lose));
+	}
+
+	//Convert win/lose probabilities in % values
+	m_team1winPerc = (team1winprobability * 100);
+	m_team2winPerc = 100 - m_team1winPerc;
+
+	//For output
+	m_team1avgpsr = gameAveragePSR;
+	m_team2avgpsr = gameAveragePSR;
+
+	m_NeedRecalculate = false;
+}
+
+void CPSR::balanceNew() {
+	//Redistribute players using both their balanceValue (mean of PSR and PlayerValue [Stats value]) as criteria
+	this->BalanceSlots2New();
+
+	//Preparation for CalculatePSR(...), Fill teams with <PlayerName, PlayerValue, PSR>
+	vector<TupledPlayerValue> team1;
+	vector<TupledPlayerValue> team2;
+
 	for (auto i = m_Slots.begin(); i != m_Slots.end(); i++) {
 		for (auto j = m_DotAPlayers.begin(); j != m_DotAPlayers.end(); j++) {
 			if ((*i).GetPID() == (*j)->GetPID()) {
-				cout << (int)(*i).m_Colour << ": " << (*j)->GetName() << " - " << (*j)->GetRating() << std::endl;
+				string Name = (*j)->GetName();
+
+				if ((*i).GetTeam() == 0) {
+					team1.push_back(make_tuple(Name, (*j)->GetBalanceValue(), (*j)->GetRating()));
+				}
+				else if ((*i).GetTeam() == 1) {
+					team2.push_back(make_tuple(Name, (*j)->GetBalanceValue(), (*j)->GetRating()));
+				}
 			}
 		}
+	}
 
+	//PSR is given based on game's average PSR and win/lose probabilities,
+	//probabilities calculated based on balanceValue
+	CalculatePSRNew(team1, team2);
+
+	//Display info for players
+	//cout << "Sentinel avg. value: " + UTIL_ToString(GetTeamAvgValue(0), 0) + "(" + UTIL_ToString(GetTeamWinPerc(0), 0) + "% to win), Scourge avg. value: " + UTIL_ToString(GetTeamAvgValue(1), 0) + "(" + UTIL_ToString(GetTeamWinPerc(1), 0) + "% to win)" << std::endl;
+}
+
+//Changes: balance using balancePlayerValue instead of GetRating()
+void CPSR::BalanceSlots2New() {
+	if (m_DotAPlayers.size() < 2)
+		return;
+
+	list<CBalanceSlot> SlotsToBalance;
+	set<unsigned char> TakenSlots;
+
+	double balancePlayerValue;
+
+	for (list<CDIV1DotAPlayer *> ::iterator i = m_DotAPlayers.begin(); i != m_DotAPlayers.end(); ++i)
+	{
+		//Mean of player's PSR and his Stats value calculated by GetPlayerValue()
+		SlotsToBalance.push_back(CBalanceSlot(false, (*i)->GetPID(), (*i)->GetCurrentTeam(), (*i)->GetBalanceValue()));
+	}
+
+	this->BalanceSlots2Recursive(SlotsToBalance);
+
+	for (list<CBalanceSlot> ::iterator i = SlotsToBalance.begin(); i != SlotsToBalance.end(); ++i)
+	{
+		if ((*i).m_Locked)
+			continue;
+
+		unsigned char j;
+		unsigned char end;
+
+		if ((*i).m_Team == 0)
+		{
+			j = 0;
+			end = 5;
+		}
+		else if ((*i).m_Team == 1)
+		{
+			j = 5;
+			end = 10;
+		}
+
+		for (; j < end; ++j)
+		{
+			if (TakenSlots.find(j) == TakenSlots.end())
+			{
+				SwapSlots(GetSIDFromPID((*i).m_PID), j);
+				TakenSlots.insert(j);
+				break;
+			}
+		}
 	}
 }
 
