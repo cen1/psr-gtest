@@ -26,5 +26,8 @@
     <ClInclude Include="psr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TestSample.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
