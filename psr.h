@@ -241,23 +241,19 @@ public:
 
 	//Calculate and return player value
 	double GetPlayerValue() {
-		//Return minimal value in case of stats not defined
-		if (m_Stats == 0) {
-			return 1000;
-		}
 
 		//TODO Move somewhere else
 		//Constants
 
-		//Expected max values
-		const float c_MaxAverageWL = 2.25;
-		const float c_MaxAverageKD = 2.91;
-		const float c_MaxAverageAD = 2.36;
-		const float c_MaxAverageCreepKills = 221.8;
-		const float c_MaxAverageNeutralKills = 49.8;
-		const float c_MaxAverageCreepDenies = 10;
-		const float c_MaxAverageRaxKills = 0.94;
-		const float c_MaxAverageTowerKills = 1.77;
+		//Expected max values, calculated using 10%-trimmed mean of top 30 players (18.01.19)
+		const float c_MaxAverageWL = 2.05; //67%
+		const float c_MaxAverageKD = 2.21;
+		const float c_MaxAverageAD = 2.04;
+		const float c_MaxAverageCreepKills = 202.06;
+		const float c_MaxAverageNeutralKills = 51.88;
+		const float c_MaxAverageCreepDenies = 9.53;
+		const float c_MaxAverageRaxKills = 0.87;
+		const float c_MaxAverageTowerKills = 1.7;
 
 		//Weights, 1 stands for 100% consideration
 		const float c_WLWeight = 1.5;
@@ -280,7 +276,7 @@ public:
 
 		uint32_t totalGames = m_Stats->GetTotalGames();
 
-		//Fair?
+		//If losses or deaths == 0, replace with 1
 		float averageWL = totalLosses > 0 ? totalWins / totalLosses : totalWins;
 		float averageKD = averageDeaths > 0 ? averageKills / averageDeaths : averageKills;
 		float averageAD = averageDeaths > 0 ? averageAssists / averageDeaths : averageAssists;
@@ -292,7 +288,6 @@ public:
 
 		float averageTowerKills = m_Stats->GetAvgTowerKills();
 		float averageRaxKills = m_Stats->GetAvgRaxKills();
-
 
 		//Limit stats to cut off extremes
 		averageWL = std::min(averageWL, c_MaxAverageWL);
@@ -318,19 +313,21 @@ public:
 		float sumWeights = c_WLWeight + c_KDWeight + c_ADWeight + c_CreepKillsWeight
 			+ c_CreepDeniesWeight + c_NeutralKillsWeight + c_RaxKillsWeight + c_TowerKillsWeight;
 
-		//Scaling sum of weights to reduce dispersion
-		sumWeights = sumWeights * 1.5;
-
 		//Normalizing multiplier
-		float multiplier = 1 + (WLValue + KDValue + ADValue + creepKillsValue 
+		float multiplier = -1 + 2 * (WLValue + KDValue + ADValue + creepKillsValue 
 			+ creepDeniesValue + neutralKillsValue + raxKillsValue + towerKillsValue) / sumWeights;
 
-		//Calculate total value and shift it above
-		double totalValue = 200 + 1000 * multiplier;
+		//Disperse totalValue around base value (1500) in [1200, 1800] interval
+		double totalValue = 1500 + 300 * multiplier;
+
+		//Set medium value for new player, since skill unknown
+		if (!(totalWins + totalLosses + averageKills + averageDeaths + averageAssists + averageCreepKills + averageCreepDenies + averageNeutralKills + averageRaxKills + averageTowerKills)) {
+			totalValue = 1500;
+		}
 
 		//Hard limits for totalValue
-		totalValue = std::max(totalValue, 1000.00);
-		totalValue = std::min(totalValue, 2000.00);
+		totalValue = std::max(totalValue, 1200.00);
+		totalValue = std::min(totalValue, 1800.00);
 
 		return totalValue;
 	}
