@@ -178,7 +178,7 @@ void CPSR :: CalculatePSR( vector<PairedPlayerRating> team1, vector<PairedPlayer
 	double team1winprobability = 1.0 / ( 1.0 + pow( E, ( ( -1.0 * diff ) / m_LogisticPredictionScale ) ) );
 	double team2winprobability = 1.0 - team1winprobability;
 
-	//Calculate Team 1 K Factors (?)
+	//Calculate Team 1 K Factors (Base PSR)
 	for( unsigned int i = 0; i < m_team1.size( ); ++i )
 	{
 		//Calculate initial K Factor, cut off extremes
@@ -333,9 +333,9 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 	vector<pair<double, double>> allPlayersGainLose;
 	vector<double> ownTeamWinProbabilities;
 	vector<double> enemyTeamWinProbabilities;
-	vector<double> ownTeamAveragePSR;
-	vector<double> playerWinPool(m_team1kfactors.size() + m_team2kfactors.size(), 0);
-	vector<double> playerLosePool(m_team1kfactors.size() + m_team2kfactors.size(), 0);
+	vector<double> ownTeamAveragePSRValues;
+	vector<double> playerWinPools(m_team1kfactors.size() + m_team2kfactors.size(), 0);
+	vector<double> playerLosePools(m_team1kfactors.size() + m_team2kfactors.size(), 0);
 	vector<double> WinPenaltyFactors(m_team1kfactors.size() + m_team2kfactors.size(), 1);
 	vector<double> LoseReductionFactors(m_team1kfactors.size() + m_team2kfactors.size(), 1);
 
@@ -343,17 +343,17 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 		playerPSR.push_back(m_team1[i].second);
 		ownTeamWinProbabilities.push_back(team1winprobability);
 		enemyTeamWinProbabilities.push_back(team2winprobability);
-		ownTeamAveragePSR.push_back(m_team1avgpsr);
+		ownTeamAveragePSRValues.push_back(m_team1avgpsr);
 	}
 	for (unsigned int i = 0; i < m_team2.size(); ++i) {
 		playerPSR.push_back(m_team2[i].second);
 		ownTeamWinProbabilities.push_back(team2winprobability);
 		enemyTeamWinProbabilities.push_back(team1winprobability);
-		ownTeamAveragePSR.push_back(m_team2avgpsr);
+		ownTeamAveragePSRValues.push_back(m_team2avgpsr);
 	}
 
 	//Distance within which no reduction can happen
-	double considerationDistance;
+	double safeDistance;
 
 	//Temporal variable to hold a reduction factor
 	double distanceReductionFactor;
@@ -372,51 +372,51 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 		basePSR = basePSR > m_MinKFactor ? basePSR : m_MinKFactor;
 
 		//Basic win pool of the player
-		playerWinPool[i] = basePSR;
+		playerWinPools[i] = basePSR;
 
 		//Distance between teamPSR and player's PSR
-		double distanceFromAverageTeamPSR = ownTeamAveragePSR[i] - playerPSR[i];
+		double distanceFromAverageTeamPSR = ownTeamAveragePSRValues[i] - playerPSR[i];
 
 		if (distanceFromAverageTeamPSR < 0) {
 			//If player has higher PSR than average in his team (TeamPSR), apply gain && loss reduction factors
 
 			//Basic lose pool
-			playerLosePool[i] = basePSR;
+			playerLosePools[i] = basePSR;
 
 			//Calculate player's PSR distance to teamPSR
 			//If PSR within 50 range of average teamPSR, no reduction
 
 			//For Win Factor
 			//PSR gained in case of victory will be reduced, due to player's own high rating (related to teamPSR)
-			considerationDistance = playerPSR[i] - 50 - ownTeamAveragePSR[i];
+			safeDistance = playerPSR[i] - 50 - ownTeamAveragePSRValues[i];
 
-			//Sets the "Rate" of reduction, the lower maxDistance the bigger the Rate, faster reduction
+			//Sets the rate of the reduction, the lower maxDistance the bigger the rate, faster reduction
 			maxDistance = 100;
 
-			considerationDistance = considerationDistance > maxDistance
-				? maxDistance : considerationDistance;
+			safeDistance = safeDistance > maxDistance
+				? maxDistance : safeDistance;
 
-			if (considerationDistance > 0 && considerationDistance <= maxDistance) {
+			if (safeDistance > 0 && safeDistance <= maxDistance) {
 				//Factor in (0, 1], the lower factor, the less PSR will be won in case of victory
 				//Bigger distance means lower factor
-				WinPenaltyFactors[i] = (maxDistance - considerationDistance) / maxDistance;
+				WinPenaltyFactors[i] = (maxDistance - safeDistance) / maxDistance;
 			}
 
 			//Lose Factor
 			//PSR lost in case of defeat will be reduced, due to player's own high rating (related to teamPSR)
-			considerationDistance = playerPSR[i] - 50 - ownTeamAveragePSR[i];
+			safeDistance = playerPSR[i] - 50 - ownTeamAveragePSRValues[i];
 
 			//Sets the "Rate" of reduction, the lower maxDistance the bigger the Rate, faster reduction
 			maxDistance = 200;
 
-			considerationDistance = considerationDistance > maxDistance
-				? maxDistance : considerationDistance;
+			safeDistance = safeDistance > maxDistance
+				? maxDistance : safeDistance;
 
-			if (considerationDistance > 0 && considerationDistance <= maxDistance) {
+			if (safeDistance > 0 && safeDistance <= maxDistance) {
 				//Factor in (0, 1], the lower factor, the less PSR will be lost in case of defeat
 				//Rate is lower which means smaller reduction "over given distance"
 				//Player can lose more PSR than gain if his rating is significantly higher than teamPSR due
-				LoseReductionFactors[i] = (maxDistance - considerationDistance) / maxDistance;
+				LoseReductionFactors[i] = (maxDistance - safeDistance) / maxDistance;
 			}
 
 		}
@@ -425,35 +425,35 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 
 			//Construct the mirrored graph which intersects the original graph in teamPSR point
 			//to form a "triangle"
-			basePSR = ((m_MedianScalingRank - 2 * ownTeamAveragePSR[i] + playerPSR[i]) / m_KFactorScale) + m_BaseKFactor;
+			basePSR = ((m_MedianScalingRank - 2 * ownTeamAveragePSRValues[i] + playerPSR[i]) / m_KFactorScale) + m_BaseKFactor;
 
 			//Retain kFactor within [10, 40] (Preset in constants). This way PSR gained/lost is normally in [5, 20] interval
 			basePSR = basePSR > m_MaxKFactor ? m_MaxKFactor : basePSR;
 			basePSR = basePSR > m_MinKFactor ? basePSR : m_MinKFactor;
 
 			//player's lose pool is calculated using the mirrored graph
-			playerLosePool[i] = basePSR;
+			playerLosePools[i] = basePSR;
 
 			//Reduction factor for PSR loss to mirror the original reduction factor
-			considerationDistance = ownTeamAveragePSR[i] - playerPSR[i] - 50;
+			safeDistance = ownTeamAveragePSRValues[i] - playerPSR[i] - 50;
 
 			maxDistance = 100;
 
-			considerationDistance = considerationDistance > maxDistance
-				? maxDistance : considerationDistance;
+			safeDistance = safeDistance > maxDistance
+				? maxDistance : safeDistance;
 
-			if (considerationDistance > 0 && considerationDistance <= maxDistance) {
+			if (safeDistance > 0 && safeDistance <= maxDistance) {
 				//Set mirrored reduction factor for PSR loss
 				//Win pool isn't reduced which makes the player win more PSR as his rating is lower than team's average
-				LoseReductionFactors[i] = (maxDistance - considerationDistance) / maxDistance;
+				LoseReductionFactors[i] = (maxDistance - safeDistance) / maxDistance;
 			}
 		}
 	}
 	
 	//Calculate both teams Win/Lose points
 	for (unsigned int i = 0; i < playerPSR.size(); ++i) {
-		double im_win = ceil(enemyTeamWinProbabilities[i] * playerWinPool[i] * WinPenaltyFactors[i]);
-		double im_lose = ceil(ownTeamWinProbabilities[i] * playerLosePool[i] * LoseReductionFactors[i]);
+		double im_win = ceil(enemyTeamWinProbabilities[i] * playerWinPools[i] * WinPenaltyFactors[i]);
+		double im_lose = ceil(ownTeamWinProbabilities[i] * playerLosePools[i] * LoseReductionFactors[i]);
 
 		//lose points are also positive
 		if (im_win < 1.0) {

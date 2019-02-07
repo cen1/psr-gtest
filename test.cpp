@@ -1,4 +1,3 @@
-#include "gtest/gtest.h"
 #include "psr.h"
 #include "TestSample.h"
 #include <iostream>

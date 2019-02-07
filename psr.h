@@ -9,13 +9,11 @@
 #include <algorithm>
 
 using std::pair;
-using std::tuple;
 using std::string;
 using std::vector;
 using std::list;
 
 typedef pair<string,double> PairedPlayerRating;
-typedef tuple<string, double, double> TupledPlayerValue;
 
 class CGameSlot;
 class CBalanceSlot;

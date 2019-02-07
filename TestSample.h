@@ -2,6 +2,7 @@
 #define TEST_H
 
 #include "psr.h"
+#include <iostream>
 
 using std::cout;
 using std::endl;
@@ -124,28 +125,6 @@ public:
 					}
 					else if ((*i).GetTeam() == 1) {
 						team2.push_back(make_pair(Name, (*j)->GetPlayerValue()));
-					}
-				}
-			}
-		}
-
-		return make_pair(team1, team2);
-	}
-
-	pair<vector<TupledPlayerValue>, vector<TupledPlayerValue>>GetTeamsWithBalanceValueFromCPSR(CPSR cpsr1) {
-		vector<TupledPlayerValue> team1;
-		vector<TupledPlayerValue> team2;
-
-		for (auto i = cpsr1.m_Slots.begin(); i != cpsr1.m_Slots.end(); i++) {
-			for (auto j = cpsr1.m_DotAPlayers.begin(); j != cpsr1.m_DotAPlayers.end(); j++) {
-				if ((*i).GetPID() == (*j)->GetPID()) {
-					string Name = (*j)->GetName();
-
-					if ((*i).GetTeam() == 0) {
-						team1.push_back(make_tuple(Name, (*j)->GetBalanceValue(), (*j)->GetRating()));
-					}
-					else if ((*i).GetTeam() == 1) {
-						team2.push_back(make_tuple(Name, (*j)->GetBalanceValue(), (*j)->GetRating()));
 					}
 				}
 			}
