@@ -1,0 +1,37 @@
+Sample Nr. 1
+
+Game: http://dota.eurobattle.net/la/forum/index.php?action=gameinfo;sa=game;gid=6175124, 1600+ high level game
+
+<Old>
+
+Sentinel avg. PSR: 1704(48% to win), Scourge avg. PSR: 1718(52% to win)
+
+<Team 1>
+1: c-hosen - 1843 - gain/lose: 1 / 1
+2: edison - 1754 - gain/lose: 6 / 4
+3: wardenhidua - 1609 - gain/lose: 10 / 9
+4: noone- - 1629 - gain/lose: 9 / 7
+5: dr.h - 1684 - gain/lose: 6 / 4
+<Team 2>
+7: meksikano - 1781 - gain/lose: 5 / 4
+8: bloodthorn - 1748 - gain/lose: 5 / 5
+9: 7654321 - 1655 - gain/lose: 7 / 6
+10: -stopfeed- - 1744 - gain/lose: 5 / 5
+11: dontafkpls - 1660 - gain/lose: 6 / 6
+
+<New>
+
+Sentinel avg. PSR: 1704(48% to win), Scourge avg. PSR: 1718(52% to win)
+
+<Team 1>
+1: c-hosen - 1843 - gain/lose: 1 / 3
+2: edison - 1754 - gain/lose: 6 / 5
+3: wardenhidua - 1609 - gain/lose: 10 / 3
+4: noone- - 1629 - gain/lose: 9 / 4
+5: dr.h - 1684 - gain/lose: 6 / 5
+<Team 2>
+7: meksikano - 1781 - gain/lose: 5 / 5
+8: bloodthorn - 1748 - gain/lose: 5 / 6
+9: 7654321 - 1655 - gain/lose: 7 / 5
+10: -stopfeed- - 1744 - gain/lose: 5 / 6
+11: dontafkpls - 1660 - gain/lose: 6 / 5

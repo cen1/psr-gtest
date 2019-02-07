@@ -1,0 +1,37 @@
+Sample Nr. 2
+
+Game: http://dota.eurobattle.net/la/forum/index.php?action=gameinfo;sa=game;gid=6175264, random game with most 1600+
+
+<Old>
+
+Sentinel avg. PSR: 1628(54% to win), Scourge avg. PSR: 1628(46% to win)
+
+<Team 1>
+1: marian_alecs - 1679 - gain/lose: 5 / 5
+2: zmrd3c3k - 1683 - gain/lose: 5 / 5
+3: dr.h - 1698 - gain/lose: 4 / 4
+4: deadmanwalking - 1640 - gain/lose: 7 / 8
+5: topol-m - 1438 - gain/lose: 19 / 21
+<Team 2>
+7: fatandviolent - 1672 - gain/lose: 6 / 5
+8: splasena.koza - 1658 - gain/lose: 7 / 5
+9: kraghack - 1550 - gain/lose: 15 / 12
+10: 7654321 - 1658 - gain/lose: 7 / 5
+11: crazy_drummer - 1602 - gain/lose: 11 / 9
+
+<New>
+
+Sentinel avg. PSR: 1628(54% to win), Scourge avg. PSR: 1628(46% to win)
+
+<Team 1>
+1: marian_alecs - 1679 - gain/lose: 5 / 6
+2: zmrd3c3k - 1683 - gain/lose: 5 / 6
+3: dr.h - 1698 - gain/lose: 4 / 5
+4: deadmanwalking - 1640 - gain/lose: 7 / 9
+5: topol-m - 1438 - gain/lose: 19 / 1
+<Team 2>
+7: fatandviolent - 1672 - gain/lose: 6 / 6
+8: splasena.koza - 1658 - gain/lose: 7 / 6
+9: kraghack - 1550 - gain/lose: 15 / 4
+10: 7654321 - 1658 - gain/lose: 7 / 6
+11: crazy_drummer - 1602 - gain/lose: 11 / 7
