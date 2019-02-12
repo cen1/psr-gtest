@@ -407,7 +407,7 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 			safeDistance = playerPSR[i] - 50 - ownTeamAveragePSRValues[i];
 
 			//Sets the "Rate" of reduction, the lower maxDistance the bigger the Rate, faster reduction
-			maxDistance = 200;
+			maxDistance = 150;
 
 			safeDistance = safeDistance > maxDistance
 				? maxDistance : safeDistance;
@@ -437,7 +437,7 @@ void CPSR::CalculatePSR_New(vector<PairedPlayerRating> team1, vector<PairedPlaye
 			//Reduction factor for PSR loss to mirror the original reduction factor
 			safeDistance = ownTeamAveragePSRValues[i] - playerPSR[i] - 50;
 
-			maxDistance = 100;
+			maxDistance = 150;
 
 			safeDistance = safeDistance > maxDistance
 				? maxDistance : safeDistance;

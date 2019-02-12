@@ -24,9 +24,9 @@ Sentinel avg. PSR: 1704(48% to win), Scourge avg. PSR: 1718(52% to win)
 Sentinel avg. PSR: 1704(48% to win), Scourge avg. PSR: 1718(52% to win)
 
 <Team 1>
-1: c-hosen - 1843 - gain/lose: 1 / 3
+1: c-hosen - 1843 - gain/lose: 1 / 2
 2: edison - 1754 - gain/lose: 6 / 5
-3: wardenhidua - 1609 - gain/lose: 10 / 3
+3: wardenhidua - 1609 - gain/lose: 10 / 4
 4: noone- - 1629 - gain/lose: 9 / 4
 5: dr.h - 1684 - gain/lose: 6 / 5
 <Team 2>

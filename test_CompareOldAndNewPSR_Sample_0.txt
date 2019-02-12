@@ -27,11 +27,11 @@ Sentinel avg. PSR: 1575(49% to win), Scourge avg. PSR: 1578(51% to win)
 1: smokin-^ - 1654 - gain/lose: 5 / 6
 2: serdarr_m - 1520 - gain/lose: 16 / 8
 3: s.t.a.r.s - 1517 - gain/lose: 16 / 8
-4: hypopo - 1721 - gain/lose: 1 / 3
-5: mirat - 1465 - gain/lose: 19 / 2
+4: hypopo - 1721 - gain/lose: 1 / 2
+5: mirat - 1465 - gain/lose: 19 / 3
 <Team 2>
-7: pizon_fcrs - 1478 - gain/lose: 18 / 3
-8: echo - 1693 - gain/lose: 2 / 4
-9: god..of..war - 1701 - gain/lose: 2 / 4
+7: pizon_fcrs - 1478 - gain/lose: 18 / 4
+8: echo - 1693 - gain/lose: 2 / 3
+9: god..of..war - 1701 - gain/lose: 2 / 3
 10: ivosanader - 1531 - gain/lose: 14 / 9
-11: ss-ballantines - 1486 - gain/lose: 17 / 4
+11: ss-ballantines - 1486 - gain/lose: 17 / 5
