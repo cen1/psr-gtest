@@ -1,1 +1,9 @@
 *.tlog
+*.db
+*.pdb
+*.txt
+x64/
+*.tlog
+*.log
+*.opendb
+.vs/
